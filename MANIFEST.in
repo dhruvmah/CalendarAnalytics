@@ -1,0 +1,4 @@
+graft NameAnalyzer/templates
+graft NameAnalyzer/static
+include NameAnalyzer/schema.sql
+

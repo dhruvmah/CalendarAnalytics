@@ -1,0 +1,1 @@
+from .NameAnalyzer import app

@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if session.logged_in %}
+    <div>
+    <div class="container mt-3">
+    
+
+    <p> Welcome to the Luna Labs NameAnalyzer. Simple enter names (First and Last Name, one per line) or upload a csv file to get the gender of every name. </p>
+    <form action="{{ url_for('add_entry') }}" method=post class=add-entry>
+      <div class="form-group">
+        <label for=name>Enter Names</label>
+        <textarea class="form-control"  name="name" id="name" placeholder="e.g. Hillary Clinton"> </textarea>
+      </div>
+        <input type=submit class="btn btn-primary" value=Share>
+    </form>
+  {% endif %}
+    </div>
+      </div>
+<div class="container mt-5">
+  <h2> Names </h2>
+  <table class="table">
+    <thead>
+    <tr>
+      <th>#</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Gender</th>
+      <th>Probability</th>
+    </tr>
+    </thead>
+    <tbody>
+  {% set count = 0 %}
+  {% for entry in entries %}
+    <tr>
+    <td> {{entry.id}} </td>
+    <td> {{ entry.firstname }} </td>
+    <td> {{ entry.lastname }}</td>
+    <td> {{ entry.gender }}</td>
+    <td> {{ entry.probability }}</td>
+    </tr>
+      {% set count = count + 1 %}
+  {% else %}
+    <li><em>Unbelievable.  No entries here so far</em> </li>
+  {% endfor %}
+  </ul>
+</div>
+
+{% endblock %}

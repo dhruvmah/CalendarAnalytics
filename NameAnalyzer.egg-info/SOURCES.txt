@@ -1,0 +1,9 @@
+MANIFEST.in
+NameAnalyzer/NameAnalyzer.py
+NameAnalyzer/__init__.py
+NameAnalyzer/schema.sql
+NameAnalyzer.egg-info/PKG-INFO
+NameAnalyzer.egg-info/SOURCES.txt
+NameAnalyzer.egg-info/dependency_links.txt
+NameAnalyzer.egg-info/requires.txt
+NameAnalyzer.egg-info/top_level.txt
