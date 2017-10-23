@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div class="container mt-5">
+  <h2> Events </h2>
+  {% for event in events %}
+    <div class="card mb-3" style="width: 20rem;"> 
+        <div class="card-body">
+          <h3 class="card-title"> {{event.summary}} </h3>
+          <p class ="card-text"> Duration: {{event.duration}} hours </p>
+            {% for attendee in event.attendees %}
+              <p class="card-text"> {{attendee.displayName}} </p>
+            {% endfor %}
+        </div>
+    </div>
+
+{% endfor %}
+
+</div>
+
+{% endblock %}

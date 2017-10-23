@@ -4,14 +4,13 @@
     <div>
     <div class="container mt-3">
     
-
     <p> Welcome to the Luna Labs NameAnalyzer. Simple enter names (First and Last Name, one per line) or upload a csv file to get the gender of every name. </p>
     <form action="{{ url_for('add_entry') }}" method=post class=add-entry>
       <div class="form-group">
         <label for=name>Enter Names</label>
         <textarea class="form-control"  name="name" id="name" placeholder="e.g. Hillary Clinton"> </textarea>
       </div>
-        <input type=submit class="btn btn-primary" value=Share>
+        <input type=submit class="btn btn-primary" value=Submit>
     </form>
   {% endif %}
     </div>
