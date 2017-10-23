@@ -1,4 +1,5 @@
 # all the imports
+import math
 from flask import Flask, redirect, request, session, g, redirect, url_for, abort, \
 	 render_template, flash
 import requests
@@ -77,13 +78,9 @@ def index():
 					event["start"]["dateTime"] = start
 					event["end"]["dateTime"] = end	
 					event["duration"] = ((end-start).seconds)/float(3600)
-		#time_by_month(events)
-		dhruv = {"oneMonthData" : 20, "sixMonthData":10, "displayName": "Dhruv"}
-		andy = {"oneMonthData" : 7, "sixMonthData":1, "displayName": "Andy"} 
-		andy1 = {"oneMonthData" : 7, "sixMonthData":1, "displayName": "Andy"} 
-		andy2= {"oneMonthData" : 7, "sixMonthData":1, "displayName": "Andy"} 
-		values = [dhruv, andy, andy1, andy2]
-		return render_template('show_events.html', values=values)
+		person_time = time_by_month(events)
+		print person_time
+		return render_template('show_events.html', events=events)
 
 def get_datetime(year, month):
 	time_naive = datetime.datetime(year, month, 1)
@@ -92,12 +89,22 @@ def get_datetime(year, month):
 	return time_aware
 
 def time_by_month(events):
-	for i in range(2013, 2015):
-		for j in range(1, 12):
-			print "Time for " + str(j) + "/" + str(i) + ":"
-			get_time_spent_with_others(events, get_datetime(i, j), get_datetime(i,j+1))	
-			print "\n"
-			print "\n"
+	# today = datetime.datetime(2015, 11, 1)
+	(all_people_six_months, names) = get_time_spent_with_others(events, get_datetime(2015, 1), get_datetime(2015, 6))
+	all_people_six_months = {person: time/6 for person,time in all_people_six_months.items()}
+	(all_people_one_months, ignore) = get_time_spent_with_others(events, get_datetime(2015, 5), get_datetime(2015, 6))
+	response = [
+		{
+			"displayName": names[person],
+			"sixMonthData": time_six_months,
+			"oneMonthData": all_people_one_months.get(person, 0)
+		} for person, time_six_months in all_people_six_months.items()]
+
+	response = sorted(response, key=lambda a:a["oneMonthData"])
+	response = reversed(response)
+
+	return list(response)
+
 
 def get_avg_meeting_length(events):
 	sum = 0
@@ -119,6 +126,7 @@ def get_avg_meeting_size(events):
 
 def get_time_spent_with_others(events, start_time, end_time):
 	all_people = {}
+	names = {}
 	for event in events:
 		#duration means that we know there's a start and end date
 		if "duration" in event and "attendees" in event:
@@ -126,6 +134,7 @@ def get_time_spent_with_others(events, start_time, end_time):
 				for attendee in event["attendees"]:
 					if attendee["responseStatus"] == "accepted":
 						all_people[attendee["email"]] = 0
+						names[attendee["email"]] = attendee.get("displayName", attendee["email"])
 						
 	for event in events:
 		#duration means that we know there's a start and end date
@@ -134,10 +143,7 @@ def get_time_spent_with_others(events, start_time, end_time):
 				for attendee in event["attendees"]:
 					if attendee["email"] in all_people:
 						all_people[attendee["email"]] += event["duration"]
-	sorted_list = sorted(all_people.items(), key=lambda x: x[1])
-	for people in sorted_list:
-		print people
-	return all_people
+	return (all_people, names)
 
 
 #	print all_people
