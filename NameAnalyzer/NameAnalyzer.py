@@ -77,8 +77,13 @@ def index():
 					event["start"]["dateTime"] = start
 					event["end"]["dateTime"] = end	
 					event["duration"] = ((end-start).seconds)/float(3600)
-		time_by_month(events)
-		return render_template('show_events.html', events=events)
+		#time_by_month(events)
+		dhruv = {"oneMonthData" : 20, "sixMonthData":10, "displayName": "Dhruv"}
+		andy = {"oneMonthData" : 7, "sixMonthData":1, "displayName": "Andy"} 
+		andy1 = {"oneMonthData" : 7, "sixMonthData":1, "displayName": "Andy"} 
+		andy2= {"oneMonthData" : 7, "sixMonthData":1, "displayName": "Andy"} 
+		values = [dhruv, andy, andy1, andy2]
+		return render_template('show_events.html', values=values)
 
 def get_datetime(year, month):
 	time_naive = datetime.datetime(year, month, 1)
