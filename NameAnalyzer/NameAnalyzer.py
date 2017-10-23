@@ -79,8 +79,8 @@ def index():
 					event["end"]["dateTime"] = end	
 					event["duration"] = ((end-start).seconds)/float(3600)
 		person_time = time_by_month(events)
-		print person_time
-		return render_template('show_events.html', events=events)
+		print person_time[0:9]
+		return render_template('show_events.html', events=events, values = person_time[1:19])
 
 def get_datetime(year, month):
 	time_naive = datetime.datetime(year, month, 1)
