@@ -85,9 +85,9 @@ def time_spent_api():
         return flask.redirect(flask.url_for('oauth2callback'))
 
     service = get_calendar(credentials)
-    start_date = request.args.get('mindDate', "2015-10-30T00:34:08+00:00")
-    end_date = request.args.get('maxDate', "2015-11-30T00:34:08+00:00")
-    size_filter = request.args.get('size_filter')
+    start_date = request.args.get('minDate', "2015-10-30T00:00:00+00:00")
+    end_date = request.args.get('maxDate', "2015-11-30T00:00:00+00:00")
+    size_filter = request.args.get('size_filter', "fiveOrMore")
 
     end = dateutil.parser.parse(end_date)
     start = dateutil.parser.parse(start_date)
@@ -109,7 +109,7 @@ def time_spent_api():
     response = sorted(response, key=lambda a:a["oneMonthData"])
     response = reversed(response)
 
-    person_time = list(response)
+    person_time = list(response)[0:20]
 
     return jsonify(person_time)
 
@@ -169,12 +169,14 @@ def get_avg_meeting_size(events):
     return float(sum)/float(count)
 
 def get_time_spent_with_others(events, start_time, end_time, size_filter):
+
     all_people = {}
     names = {}
     for event in events:
         #duration means that we know there's a start and end date
         if "duration" in event and "attendees" in event:
-            if event["start"]["dateTime"] >= start_time and event["end"]["dateTime"] <= end_time:
+            if event["start"]["dateTime"] >= start_time and event["end"]["dateTime"] <= end_time \
+                    and get_size_filter(size_filter)(len(event["attendees"])):
                 for attendee in event["attendees"]:
                     if attendee["responseStatus"] == "accepted" \
                             and (not attendee.has_key('resource') or attendee["resource"] == False) \
@@ -193,6 +195,16 @@ def get_time_spent_with_others(events, start_time, end_time, size_filter):
     time_diff = end_time - start_time
     all_people = {person: time/(time_diff.days/7) for person, time in all_people.items()}
     return (all_people, names)
+
+def get_size_filter(size_filter):
+    if size_filter == 'oneOnOne':
+        return lambda size: size == 2
+    elif size_filter == 'lessThanFive':
+        return lambda size: size > 2 and size < 5
+    elif size_filter == 'fiveOrMore':
+        return lambda size: size >= 5
+    else:
+        return lambda size: True
 
 @app.route('/oauth2callback')
 def oauth2callback():
