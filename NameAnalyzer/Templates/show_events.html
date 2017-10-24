@@ -1,74 +1,175 @@
 {% extends "layout.html" %}
 {% block body %}
 
-<canvas id="chart"></canvas>
-
 <script>
-   // bar chart data
-   label_array = []
-   one_month_data = []
-   six_month_data = []
 
-   {% for person in values %}
-    label_array.push("{{person.displayName}}");
-    one_month_data.push("{{person.oneMonthData}}")
-    six_month_data.push("{{person.sixMonthData}}")
-
-    console.log(label_array)
-    console.log("testing")
-
-    {% endfor %}
-    dataset_array = [
-        {
-            label: "1 month average",
-            backgroundColor: "blue",
-            data: one_month_data
-        },
-        {
-            label: "6 month average",
-            backgroundColor: "red",
-            data: six_month_data
-        }
-    ]
-
-   var barData = {
-     labels : label_array,
-     datasets : dataset_array,
-   }
- 
-   // get bar chart canvas
-   var mychart = document.getElementById("chart").getContext("2d");
-   steps = 10
-   max = 10
-   // draw bar chart
+$(function() {
+    var dateFormat = "mm/dd/yy",
+    from = $( "#from" )
+      .datepicker({
+        defaultDate: "+1w",
+        changeMonth: true,
+        numberOfMonths: 1
+      })
+      .on( "change", function() {
+        to.datepicker( "option", "minDate", getDate( this ) );
+      }),
+    to = $( "#to" ).datepicker({
+      defaultDate: "+1w",
+      changeMonth: true,
+      numberOfMonths: 1
+    })
+    .on( "change", function() {
+      from.datepicker( "option", "maxDate", getDate( this ) );
+    });
 
 
+    function fetchDates() { 
+      minDate = $("#from").datepicker( "getDate" );
+      maxDate =  $("#to").datepicker( "getDate" );
+      console.log(minDate);
+      console.log(maxDate);
+      var dict = {"minDate" : minDate, "maxDate" : maxDate};
+      return dict;
+      };
 
-  var myBarChart = new Chart(mychart, {
-      type: 'horizontalBar',
-      data: barData,
-      options: {
-          legend: {
-             position: "bottom"
-          },
+    function fetchMeetingFilter() { 
+       var radioValue = $("input[name='radio']:checked").val();
+       console.log(radioValue);
+      };
 
-          barValueSpacing: 100,
-          scales: {
-            yAxes: [
-              {
-                ticks: {
-                   min: 0,
-                }
-              }]
-          }
-        }
+
+    function getDate( element ) {
+      var date;
+      try {
+          date = $.datepicker.parseDate( dateFormat, element.value );
+      } catch( error ) {
+          date = null;
+      }
+          return date;
+      }
+
+    function fetchData_temp(minDate, maxDate) {
+      var andy = {
+      "displayName": "Andy",
+      "sixMonthData": 10,
+      "oneMonthData": 16
+      }
+
+      var dhruv = {
+      "displayName": "Dhruv",
+      "sixMonthData": 1,
+      "oneMonthData": 2
+      }
+
+      return [andy, dhruv];
+    }
+
+    function fetchData(minDate, maxDate, filter) {
+      $.getJSON($SCRIPT_ROOT + '/api/timespent', {
+        minDate: minDate,
+        maxDate: maxDate,
+        meeting_type : filter
+      }, function(data) {
+        console.log(data);
+        draw_chart(data);
       });
+    }
 
-</script>
+    function draw_chart(data) {
+        console.log(data);
+        // bar chart data
+        var label_array = [];
+        var one_month_data = [];
+        var six_month_data = [];
+        var person;
+
+        for(var i = 0, size = data.length; i < size ; i++){
+          person = data[i];
+          console.log(person["displayName"]);
+          label_array.push(person["displayName"]);
+          one_month_data.push(person["oneMonthData"]);
+          six_month_data.push(person["sixMonthData"]);
+        }
+
+        dataset_array = [
+            {
+                label: "1 month average",
+                backgroundColor: "blue",
+                data: one_month_data
+            },
+            {
+                label: "6 month average",
+                backgroundColor: "red",
+                data: six_month_data
+            }
+        ]
+       var barData = {
+         labels : label_array,
+         datasets : dataset_array,
+       } 
+       // get bar chart canvas
+       var mychart = document.getElementById("chart").getContext("2d");
+       steps = 10
+       max = 10
+       // draw bar chart
+       var myBarChart = new Chart(mychart, {
+          type: 'horizontalBar',
+          data: barData,
+          options: {
+              legend: {
+                 position: "bottom"
+              },
+
+              barValueSpacing: 100,
+              scales: {
+                yAxes: [
+                  {
+                    ticks: {
+                       min: 0,
+                    }
+                  }]
+              }
+            }
+        });
+      }
+
+    $( "#submit" ).click(function() {
+      console.log("Submit button clicked");
+      dates = fetchDates();
+      filter = fetchMeetingFilter()
+      data = fetchData(dates.minDate, dates.maxDate, filter);
+      //draw_chart(data)
+    });
+})
+
+
+
+  </script>
+
+
+<label for="from">From</label>
+<input type="text" id="from" name="from">
+<label for="to">to</label>
+<input type="text" id="to" name="to">
+
+  <form>
+      <label for="all" class="radio-inline">All Meetings </label> <input type="radio" name="radio" id="radio-1" value="">
+    <label for="1:1" class="radio-inline">1:1s Only</label> <input type="radio" name="radio" id="radio-1" value="1:1">
+    <label for="<5" class="radio-inline">Less than 5 people</label><input type="radio" name="radio" id="radio-1" value="lessThanFive">
+    <label for=">5" class="radio-inline">More than 5 people </label> <input type="radio" name="radio" id="radio-1" value="fiveOrMore">
+
+  <button type="button" id="submit" class="btn btn-primary"> Submit </button>
+
+</form>
+
+
+
+
+<canvas id="chart" height="300px"></canvas>
+
 
 <div class="container mt-5">
-
-
 
   <h2> Events </h2>
   {% for event in events %}
