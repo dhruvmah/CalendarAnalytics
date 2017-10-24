@@ -63,9 +63,7 @@ def index():
     events = eventsResult.get('items', [])
     if not events:
         print('No upcoming events found.')
-    person_time = time_by_month(events)
-    print person_time[0:9]
-    return render_template('show_events.html', events=events, values = person_time[1:19])
+    return render_template('show_events.html', events=events)
 
 def convert_to_datetimes(events):
     for event in events:
@@ -87,7 +85,7 @@ def time_spent_api():
     service = get_calendar(credentials)
     start_date = request.args.get('minDate', "2015-10-30T00:00:00+00:00")
     end_date = request.args.get('maxDate', "2015-11-30T00:00:00+00:00")
-    size_filter = request.args.get('size_filter', "fiveOrMore")
+    size_filter = request.args.get('sizeFilter', "fiveOrMore")
 
     end = dateutil.parser.parse(end_date)
     start = dateutil.parser.parse(start_date)
@@ -200,7 +198,7 @@ def get_size_filter(size_filter):
     if size_filter == 'oneOnOne':
         return lambda size: size == 2
     elif size_filter == 'lessThanFive':
-        return lambda size: size > 2 and size < 5
+        return lambda size: size < 5
     elif size_filter == 'fiveOrMore':
         return lambda size: size >= 5
     else:
