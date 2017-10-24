@@ -63,9 +63,9 @@ def index():
     events = eventsResult.get('items', [])
     if not events:
         print('No upcoming events found.')
-    person_time = time_by_month(events)
-    print person_time[0:9]
-    return render_template('show_events.html', events=events, values = person_time[1:19])
+    #person_time = time_by_month(events)
+    #print person_time[0:9]
+    return render_template('show_events.html', events=events)
 
 def convert_to_datetimes(events):
     for event in events:
