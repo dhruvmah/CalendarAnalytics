@@ -96,7 +96,8 @@ $(function() {
 	
 
 	function draw_overall_chart(data) {
-		console.log(data);
+		$("canvas#chart").remove();
+		$(".chartContainer").append('<canvas id="chart" class="animated fadeIn" height="150"></canvas>');
 		// bar chart data
 		var label_array = [];
 		var one_month_data = [];
