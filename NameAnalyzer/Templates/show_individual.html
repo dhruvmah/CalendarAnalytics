@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script type=text/javascript> 
+
+$(function() {
+  	function fetch_individual_data(email){
+	  $.getJSON($SCRIPT_ROOT + '/api/personStats', {
+		personEmail: email,
+		maxDate: new Date()
+	  }, function(data) {
+		console.log(data);
+	  });
+  	}
+
+	console.log("test");
+	fetch_individual_data("{{email}}")
+
+});
+</script>
+
+
+<div class="container mx-auto">
+	<h1> Time Analyzer </h1>
+	<p> Here are your interactions with {{email}}! </p>
+</div>
+
+
+{% endblock %}
+
+

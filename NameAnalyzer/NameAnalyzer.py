@@ -63,6 +63,17 @@ def index():
     return render_template('show_events.html')
 
 
+@app.route('/individual/<email>')
+def individual(email):
+    credentials = get_credentials()
+    if credentials == None:
+        return flask.redirect(flask.url_for('oauth2callback'))
+
+    service = get_calendar(credentials)
+    return render_template('show_individual.html', email=email)
+
+
+
 def convert_to_datetimes(events):
     for event in events:
         if "start" in event:
@@ -124,7 +135,7 @@ def rollups():
 
     service = get_calendar(credentials)
     one_months_events = get_events(service, start, end)
-    valid_meetings = [event for event in one_months_events if valid_meeting(event)]
+    valid_meetings = [event for event in one_months_events if is_valid_meeting(event)]
 
     time_in_meetings = sum([event["duration"] for event in valid_meetings])
     all_attendees = [person for event in valid_meetings for person in get_real_attendees(event)]
@@ -132,13 +143,45 @@ def rollups():
 
     (all_people_one_months, names) = get_time_spent_with_others(one_months_events, start, end)
     topFive = sorted(all_people_one_months.items(), key=lambda (email,time): -time)[0:5]
-    topFiveNames = [names[email] for (email,time) in topFive]
+    topFiveNames = [{"name": names[email], "email": email} for (email,time) in topFive]
 
     response = {
         "timeInMeetings": time_in_meetings,
         "numberOfMeetings": len(valid_meetings),
         "totalPeopleMet": len(all_unique),
         "topFive": topFiveNames
+    }
+
+    return jsonify(response)
+
+
+@app.route('/api/personStats')
+def person_stats():
+    credentials = get_credentials()
+    if credentials is None:
+        return flask.redirect(flask.url_for('oauth2callback'))
+
+    person_email = request.args.get('personEmail', "alex.lee@nutanix.com")
+    end_date_param = request.args.get('maxDate', "2015-12-30T00:00:00+00:00")
+
+
+    end_date = datetime.datetime.combine(dateutil.parser.parse(end_date_param).date().replace(day=1), datetime.datetime.min.time())
+    end_date = end_date.replace(tzinfo=pytz.utc)
+
+    start = end_date - dateutil.relativedelta.relativedelta(months=6)
+
+    service = get_calendar(credentials)
+    events = get_events(service, start, end_date)
+    valid_meetings = [event for event in events if is_valid_meeting(event)]
+    person_meetings = [event for event in valid_meetings if person_in_meeting(person_email, event)]
+
+    monthStarts = [start + dateutil.relativedelta.relativedelta(months=i) for i in range(6)]
+
+    meeting_months = {monthStart: [meeting for meeting in person_meetings if event_in_range(meeting, monthStart, monthStart + dateutil.relativedelta.relativedelta(months=1))] for monthStart in monthStarts}
+
+    response = {
+        "timeInMeetingsSeries": {monthStart.date().isoformat(): sum([meeting["duration"] for meeting in meetings]) for monthStart, meetings in meeting_months.items()},
+        "numberOfMeetingsSeries": {monthStart.date().isoformat(): len(meetings) for monthStart, meetings in meeting_months.items()}
     }
 
     return jsonify(response)
@@ -162,27 +205,13 @@ def get_datetime(year, month):
     return time_aware
 
 
+def event_in_range(event, start, end):
+    return event["start"]["dateTime"] >= start and event["end"]["dateTime"] <= end
+
+
 def localize(raw_datetime):
     timezone = pytz.timezone("America/Los_Angeles")
     return timezone.localize(raw_datetime)
-
-
-def time_by_month(events):
-    # today = datetime.datetime(2015, 11, 1)
-    (all_people_six_months, names) = get_time_spent_with_others(events, get_datetime(2015, 1), get_datetime(2015, 6))
-    all_people_six_months = {person: time / 6 for person, time in all_people_six_months.items()}
-    (all_people_one_months, ignore) = get_time_spent_with_others(events, get_datetime(2015, 5), get_datetime(2015, 6))
-    response = [
-        {
-            "displayName": names[person],
-            "sixMonthData": time_six_months,
-            "oneMonthData": all_people_one_months.get(person, 0)
-        } for person, time_six_months in all_people_six_months.items()]
-
-    response = sorted(response, key=lambda a: a["oneMonthData"])
-    response = reversed(response)
-
-    return list(response)
 
 
 def get_avg_meeting_length(events):
@@ -209,7 +238,7 @@ def get_time_spent_with_others(events, start_time, end_time, size_filter_name="A
     time_diff = end_time - start_time
     size_filter = get_size_filter(size_filter_name)
     # duration means that we know there's a start and end date
-    valid_events = [event for event in events if valid_meeting(event)]
+    valid_events = [event for event in events if is_valid_meeting(event)]
     events_within_time = [event for event in valid_events if event["start"]["dateTime"] >= start_time and event["end"]["dateTime"] <= end_time]
     events_within_size = [event for event in events_within_time if size_filter(len(event["attendees"]))]
 
@@ -223,7 +252,7 @@ def get_time_spent_with_others(events, start_time, end_time, size_filter_name="A
     return all_people, names
 
 
-def valid_meeting(event):
+def is_valid_meeting(event):
     return "duration" in event and "attendees" in event and len(get_real_attendees(event)) > 0
 
 

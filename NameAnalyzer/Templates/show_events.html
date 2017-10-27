@@ -1,197 +1,12 @@
 {% extends "layout.html" %}
 {% block body %}
 
-<script>
-
-$(function() {
-
-    function getRollUps() {
-      $.getJSON($SCRIPT_ROOT + '/api/rollups', function(data) {
-        load_rollups(data);
-      })
-    };
-
-    function load_rollups(data) {
-      $(".timeInMeetings").append(data["timeInMeetings"] + " hours");
-      $(".numberOfMeetings").append(data["numberOfMeetings"] + " meetings");
-      $(".totalPeopleMet").append(data["totalPeopleMet"] + " people");
-
-      for(var i = 0, size = data["topFive"].length; i < size; i++){
-          $(".topFive").append("<li>" + data["topFive"][i] + "</li>");
-      }
-    }
-
-    getRollUps();
-
-    function fetchData(minDate, maxDate, filter) {
-      $.getJSON($SCRIPT_ROOT + '/api/timespent', {
-        minDate: minDate,
-        maxDate: maxDate,
-        sizeFilter : filter
-      }, function(data) {
-        console.log(data);
-        draw_chart(data);
-      });
-    }
-
-    /*function fetchDates() { 
-      minDate = $("#from").datepicker( "getDate" );
-      maxDate =  $("#to").datepicker( "getDate" );
-      console.log(minDate);
-      console.log(maxDate);
-      var dict = {"minDate" : minDate, "maxDate" : maxDate};
-      return dict;
-      };
-    */
-    function fetchDates() { 
-       var radioValue = $("input[name='date_range']:checked").val();
-       var maxDate = new Date();
-       var minDate = new Date();
-       if (radioValue == 3) {
-          minDate.setMonth(minDate.getMonth() - 3);   
-       } else if (radioValue == 2) {
-          minDate.setMonth(minDate.getMonth() - 1);   
-       } else {
-          minDate.setDate(minDate.getDate() - 14);   
-       }
-        var dict = {"minDate": minDate, "maxDate": maxDate};
-        return dict; 
-      };
-
-
-      function addMonths(date, months) {
-        var result = new Date(date),
-            expectedMonth = ((date.getMonth() + months) % 12 + 12) % 12;
-        result.setMonth(result.getMonth() + months);
-        if (result.getMonth() !== expectedMonth) {
-          result.setDate(0);
-        }
-        return result;
-      }
-
-
-    function fetchMeetingFilter() { 
-       var radioValue = $("input[name='radio']:checked").val();
-       console.log(radioValue);
-       return radioValue;
-      };
-
-
-    function getDate( element ) {
-      var date;
-      try {
-          date = $.datepicker.parseDate( dateFormat, element.value );
-      } catch( error ) {
-          date = null;
-      }
-          return date;
-      }
-
-    function fetchData_temp(minDate, maxDate) {
-      var andy = {
-      "displayName": "Andy",
-      "sixMonthData": 10,
-      "oneMonthData": 16
-      }
-
-      var dhruv = {
-      "displayName": "Dhruv",
-      "sixMonthData": 1,
-      "oneMonthData": 2
-      }
-
-      return [andy, dhruv];
-    }
-
-    function fetchData(minDate, maxDate, filter) {
-      $.getJSON($SCRIPT_ROOT + '/api/timespent', {
-        minDate: minDate,
-        maxDate: maxDate,
-        sizeFilter : filter
-      }, function(data) {
-        console.log(data);
-        draw_chart(data);
-      });
-    }
-
-    function draw_chart(data) {
-        console.log(data);
-        // bar chart data
-        var label_array = [];
-        var one_month_data = [];
-        var six_month_data = [];
-        var person;
-
-        for(var i = 0, size = data.length; i < size ; i++){
-          person = data[i];
-          console.log(person["displayName"]);
-          label_array.push(person["displayName"]);
-          one_month_data.push(person["oneMonthData"]);
-          six_month_data.push(person["sixMonthData"]);
-        }
-
-        dataset_array = [
-            {
-                label: "1 month average",
-                backgroundColor: "blue",
-                data: one_month_data
-            },
-            {
-                label: "6 month average",
-                backgroundColor: "red",
-                data: six_month_data
-            }
-        ]
-       var barData = {
-         labels : label_array,
-         datasets : dataset_array,
-       } 
-       // get bar chart canvas
-       var mychart = document.getElementById("chart").getContext("2d");
-       steps = 10
-       max = 10
-       // draw bar chart
-
-       myBarChart = new Chart(mychart, {
-          type: 'horizontalBar',
-          data: barData,
-          options: {
-              legend: {
-                 position: "bottom"
-              },
-
-              barValueSpacing: 100,
-              scales: {
-                yAxes: [
-                  {
-                    ticks: {
-                       min: 0,
-                    }
-                  }]
-              }
-            }
-        });
-      }
-
-    $( "#submit" ).click(function() {
-      console.log("Submit button clicked");
-      dates = fetchDates();
-      filter = fetchMeetingFilter()
-      data = fetchData(dates.minDate, dates.maxDate, filter);
-    });
-})
-
-
-
-  </script>
 
 <div class="container mx-auto">
-    <h1> Time Analyzer </h1>
+	<h1> Time Analyzer </h1>
 
-    <p> Welcome to the time analyzer! Choose from the options and then click "go" to find out who you're spending the most time with on a regular basis! </p>
+	<p> Welcome to the time analyzer! Choose from the options and then click "go" to find out who you're spending the most time with on a regular basis! </p>
 </div>
-
-
 
 
 <div class="container mt-4 mx-auto">
@@ -201,95 +16,89 @@ $(function() {
 <div class="card-deck">
 
   <div class="card" style="width: 15rem;">
-      <div class="card-header">
-        Total Meeting Time
-      </div>
-
+	  <div class="card-header">
+		Total Meeting Time
+	  </div>
   <div class="card-body">
-    <p class="text-center timeInMeetings"></p>
+	<p class="card-main text-center timeInMeetings"></p>
+	<p class="subtitle mb-2 text-muted"></p>
   </div>
   </div>
 
   <div class="card" style="width: 15rem;">
-      <div class="card-header">
-        Number of Meetings
-      </div>
-      <div class="card-body">
-        <p class="text-center numberOfMeetings"></p>
-      </div>
+	  <div class="card-header">
+		Number of Meetings
+	  </div>
+	  <div class="card-body">
+		<p class="card-main text-center numberOfMeetings"></p>
+		<p class="subtitle mb-2 text-muted"></p>
+	  </div>
   </div>
 
-    <div class="card" style="width: 15rem;">
-      <div class="card-header">
-        Total People Met 
-      </div>
-      <div class="card-body">
-        <p class="text-center totalPeopleMet"></p>
-      </div>
-    </div>
+	<div class="card" style="width: 15rem;">
+	  <div class="card-header">
+		Total People Met 
+	  </div>
+	  <div class="card-body">
+		<p class="card-main text-center totalPeopleMet"></p>
+		<p class="subtitle mb-2 text-muted"></p>
 
-    <div class="card" style="width: 15rem;">
-       <div class="card-header">
-            Top Five People
-       </div>
-      <div class="card-body">
-        <ul class="topFive"></ul>
-      </div>
-    </div>
+	  </div>
+	</div>
 
-</div>
-
-</div>
-
-
-
-<div class = "container mt-4 mx-auto">
-
-  <form>
-  <div class="btn-group" data-toggle="buttons">
-      <label> Time Period: </label>
-      <label for="all" class="radio-inline btn btn-secondary active"> <input type="radio" name="date_range" id="radio-1" value="1"> Last 2 weeks </label>
-      <label for="1:1" class="radio-inline btn btn-secondary " > <input type="radio" name="date_range" id="radio-1" value="2"> Last 1 month </label>
-      <label for="<5" class="radio-inline btn btn-secondary "><input type="radio" name="date_range" id="radio-1" value="3">Last 3 months</label>
-
-  </div>
-
-
-
-    <div class="btn-group mt-3" data-toggle="buttons">
-      <p> Meeting Type: </p>
-      <label for="all" class="radio-inline btn btn-secondary active"><input type="radio" name="radio" id="radio-1" value="" autocomplete="off">All Meetings </label>
-    <label for="1:1" class="radio-inline btn btn-secondary "><input type="radio" name="radio" id="radio-1" value="oneOnOne">1:1s Only</label> 
-    <label for="<5" class="radio-inline btn btn-secondary "><input type="radio" name="radio" id="radio-1" value="lessThanFive">Less than 5 people</label>
-    <label for=">5" class="radio-inline btn btn-secondary "><input type="radio" name="radio" id="radio-1" value="fiveOrMore"> More than 5 people</label> 
-
-  </div>
-  <button type="button" id="submit" class="btn btn-primary"> Submit </button>
-
-</form>
-
-
-
-<canvas id="chart" height="300px"></canvas>
+	<div class="card" style="width: 15rem;">
+	   <div class="card-header">
+			Top Five People
+	   </div>
+	  <div class="card-body">
+		<ul class="topFive"></ul>
+	  </div>
+	</div>
 
 </div>
 
-<div class="container mt-5">
-
-  <h2> Events </h2>
-  {% for event in events %}
-    <div class="card mb-3" style="width: 20rem;"> 
-        <div class="card-body">
-          <h3 class="card-title"> {{event.summary}} </h3>
-          <p class ="card-text"> Duration: {{event.duration}} hours </p>
-            {% for attendee in event.attendees %}
-              <p class="card-text"> {{attendee.displayName}} </p>
-            {% endfor %}
-        </div>
-    </div>
-
-{% endfor %}
-
 </div>
 
+<div class= "container mt-5 mx-auto">
+	<h3> Who you spent your time with... </h3>
+	<div class = "graph container mx-auto  border rounded p-3">
+		<div class="row">
+		    <div class="col-sm">
+		    </div>
+
+		    <div class="col-sm">
+				<p class="justify-content-md-center"> Select your time range and type of meeting below! </p>
+
+			  	<form>
+					<div class="btn-group" data-toggle="buttons">
+						<label for="all" class="radio-inline btn btn-secondary"> <input type="radio" name="date_range" id="radio-1" value="1"> Last 1 month </label>
+						<label for="1:1" class="radio-inline btn btn-secondary " > <input type="radio" name="date_range" id="radio-1" value="2"> Last 3 months </label>
+						<label for="<5" class="radio-inline btn btn-secondary "><input type="radio" name="date_range" id="radio-1" value="3">Last 6 months</label>
+					</div>
+
+					<br />
+
+
+					<div class="btn-group mt-3" data-toggle="buttons">
+						<label for="all" class="radio-inline btn btn-secondary active"><input type="radio" name="radio" id="radio-1" value="" autocomplete="off">All Meetings </label>
+						<label for="1:1" class="radio-inline btn btn-secondary "><input type="radio" name="radio" id="radio-1" value="oneOnOne">1:1s Only</label> 
+						<label for="<5" class="radio-inline btn btn-secondary "><input type="radio" name="radio" id="radio-1" value="lessThanFive">Less than 5 people</label>
+						<label for=">5" class="radio-inline btn btn-secondary "><input type="radio" name="radio" id="radio-1" value="fiveOrMore"> More than 5 people</label> 
+
+				  	</div>
+			  	
+		    	</form>
+			</div>
+		    <div class="col-sm">
+
+		    </div>
+		</div>
+
+		<canvas id="chart" class="mt-5 p-3"></canvas>
+
+	</div>
+
+</div>
 {% endblock %}
+
+
