@@ -138,7 +138,7 @@ def rollups():
 
     (all_people_one_months, names) = get_time_spent_with_others(one_months_events, start, end)
     topFive = sorted(all_people_one_months.items(), key=lambda (email,time): -time)[0:5]
-    topFiveNames = [names[email] for (email,time) in topFive]
+    topFiveNames = [{"name": names[email], "email": email} for (email,time) in topFive]
 
     response = {
         "timeInMeetings": time_in_meetings,
@@ -173,8 +173,6 @@ def person_stats():
     monthStarts = [start + dateutil.relativedelta.relativedelta(months=i) for i in range(6)]
 
     meeting_months = {monthStart: [meeting for meeting in person_meetings if event_in_range(meeting, monthStart, monthStart + dateutil.relativedelta.relativedelta(months=1))] for monthStart in monthStarts}
-
-    print(meeting_months)
 
     response = {
         "timeInMeetingsSeries": {monthStart.date().isoformat(): sum([meeting["duration"] for meeting in meetings]) for monthStart, meetings in meeting_months.items()},
