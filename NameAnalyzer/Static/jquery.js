@@ -100,6 +100,7 @@ $(function() {
 		$(".chartContainer").append('<canvas id="chart" class="animated fadeIn" height="150"></canvas>');
 		// bar chart data
 		var label_array = [];
+		var email_array = []
 		var one_month_data = [];
 		var six_month_data = [];
 		var person;
@@ -108,6 +109,7 @@ $(function() {
 		  person = data[i];
 		  console.log(person["displayName"]);
 		  label_array.push(person["displayName"]);
+		  email_array.push(person["email"]);
 		  one_month_data.push(roundHalf(person["oneMonthData"]));
 		}
 
@@ -125,6 +127,7 @@ $(function() {
 		]
 	   var barData = {
 		 labels : label_array,
+		 emails: email_array,
 		 datasets : dataset_array,
 	   } 
 	   // get bar chart canvas
@@ -169,7 +172,10 @@ $(function() {
 
 		$("#chart").click(function(e) {
 			var activeBars = myBarChart.getElementAtEvent(e); 
-	   		console.log(activeBars);
+			console.log(activeBars[0]._model.label);
+
+			var a = activeBars[0]._chart.config.data.labels.indexOf(activeBars[0]._model.label);
+	   		window.location.href='/individual/' + activeBars[0]._chart.config.data.emails[a];
 		});
 	  }
 

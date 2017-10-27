@@ -110,6 +110,7 @@ def time_spent_api():
     names.update(names_six)
     response = [
         {
+        	"email" : person,
             "displayName": names[person],
             "sixMonthData": time_six_months,
             "oneMonthData": all_people_one_months.get(person, 0)
