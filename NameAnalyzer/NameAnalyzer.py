@@ -115,6 +115,7 @@ def time_spent_api():
 
     response = [
         {
+            "email" : person,
             "displayName": six_month_data["name"],
             "sixMonthData": six_month_data["time"]/((end - six_month_start).days/7),
             "oneMonthData": all_people_one_months.get(person, 0)/((end - start).days/7)
