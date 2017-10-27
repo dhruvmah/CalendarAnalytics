@@ -5,11 +5,34 @@
 
 $(function() {
 
-    function fetchMeetingFilter() { 
-       var radioValue = $("input[name='radio']:checked").val();
-       console.log(radioValue);
-       return radioValue;
-      };
+    function getRollUps() {
+      $.getJSON($SCRIPT_ROOT + '/api/rollups', function(data) {
+        load_rollups(data);
+      })
+    };
+
+    function load_rollups(data) {
+      $(".timeInMeetings").append(data["timeInMeetings"] + " hours");
+      $(".numberOfMeetings").append(data["numberOfMeetings"] + " meetings");
+      $(".totalPeopleMet").append(data["totalPeopleMet"] + " people");
+
+      for(var i = 0, size = data["topFive"].length; i < size; i++){
+          $(".topFive").append("<li>" + data["topFive"][i] + "</li>");
+      }
+    }
+
+    getRollUps();
+
+    function fetchData(minDate, maxDate, filter) {
+      $.getJSON($SCRIPT_ROOT + '/api/timespent', {
+        minDate: minDate,
+        maxDate: maxDate,
+        sizeFilter : filter
+      }, function(data) {
+        console.log(data);
+        draw_chart(data);
+      });
+    }
 
     /*function fetchDates() { 
       minDate = $("#from").datepicker( "getDate" );
@@ -168,46 +191,51 @@ $(function() {
     <p> Welcome to the time analyzer! Choose from the options and then click "go" to find out who you're spending the most time with on a regular basis! </p>
 </div>
 
+
+
+
 <div class="container mt-4 mx-auto">
 
+<h3> Your month at a glance...</h3>
 
 <div class="card-deck">
 
-  <div class="card" style="width: 20rem;">
+  <div class="card" style="width: 15rem;">
+      <div class="card-header">
+        Total Meeting Time
+      </div>
+
   <div class="card-body">
-    <h4 class="card-title">Card title</h4>
-    <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
-    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+    <p class="text-center timeInMeetings"></p>
   </div>
-</div>
-
-
-<div class="card" style="width: 20rem;">
-  <div class="card-body">
-    <h4 class="card-title">Card title</h4>
-    <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
-    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
   </div>
-</div>
 
-<div class="card" style="width: 20rem;">
-  <div class="card-body">
-    <h4 class="card-title">Card title</h4>
-    <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
-    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+  <div class="card" style="width: 15rem;">
+      <div class="card-header">
+        Number of Meetings
+      </div>
+      <div class="card-body">
+        <p class="text-center numberOfMeetings"></p>
+      </div>
   </div>
-</div>
 
+    <div class="card" style="width: 15rem;">
+      <div class="card-header">
+        Total People Met 
+      </div>
+      <div class="card-body">
+        <p class="text-center totalPeopleMet"></p>
+      </div>
+    </div>
 
-
-<div class="card" style="width: 20rem;">
-  <div class="card-body">
-    <h4 class="card-title">Card title</h4>
-    <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
-    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-  </div>
-</div>
-
+    <div class="card" style="width: 15rem;">
+       <div class="card-header">
+            Top Five People
+       </div>
+      <div class="card-body">
+        <ul class="topFive"></ul>
+      </div>
+    </div>
 
 </div>
 
