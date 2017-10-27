@@ -157,20 +157,28 @@ def person_stats():
         return flask.redirect(flask.url_for('oauth2callback'))
 
     person_email = request.args.get('personEmail', "alex.lee@nutanix.com")
-    end_date = request.args.get('maxDate', "2015-10-30T00:00:00+00:00")
-    end = dateutil.parser.parse(end_date)
-    start = end - datetime.timedelta(days=1 * 30)
+    end_date_param = request.args.get('maxDate', "2015-12-30T00:00:00+00:00")
+
+
+    end_date = datetime.datetime.combine(dateutil.parser.parse(end_date_param).date().replace(day=1), datetime.datetime.min.time())
+    end_date = end_date.replace(tzinfo=pytz.utc)
+
+    start = end_date - dateutil.relativedelta.relativedelta(months=6)
 
     service = get_calendar(credentials)
-    one_months_events = get_events(service, start, end)
-    valid_meetings = [event for event in one_months_events if valid_meeting(event)]
+    events = get_events(service, start, end_date)
+    valid_meetings = [event for event in events if valid_meeting(event)]
     person_meetings = [event for event in valid_meetings if person_in_meeting(person_email, event)]
 
-    time_in_meetings = sum([event["duration"] for event in person_meetings])
+    monthStarts = [start + dateutil.relativedelta.relativedelta(months=i) for i in range(6)]
+
+    meeting_months = {monthStart: [meeting for meeting in person_meetings if event_in_range(meeting, monthStart, monthStart + dateutil.relativedelta.relativedelta(months=1))] for monthStart in monthStarts}
+
+    print(meeting_months)
 
     response = {
-        "timeInMeetings": time_in_meetings,
-        "numberOfMeetings": len(person_meetings)
+        "timeInMeetingsSeries": {monthStart.date().isoformat(): sum([meeting["duration"] for meeting in meetings]) for monthStart, meetings in meeting_months.items()},
+        "numberOfMeetingsSeries": {monthStart.date().isoformat(): len(meetings) for monthStart, meetings in meeting_months.items()}
     }
 
     return jsonify(response)
@@ -193,6 +201,9 @@ def get_datetime(year, month):
     timezone = pytz.timezone("America/Los_Angeles")
     time_aware = timezone.localize(time_naive)
     return time_aware
+
+def event_in_range(event, start, end):
+    return event["start"]["dateTime"] >= start and event["end"]["dateTime"] <= end
 
 
 def localize(raw_datetime):
