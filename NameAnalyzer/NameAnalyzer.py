@@ -93,9 +93,9 @@ def time_spent_api():
         return flask.redirect(flask.url_for('oauth2callback'))
 
     service = get_calendar(credentials)
-    start_date = request.args.get('minDate', "2015-10-30T00:00:00+00:00")
-    end_date = request.args.get('maxDate', "2015-11-30T00:00:00+00:00")
-    size_filter = request.args.get('sizeFilter', "fiveOrMore")
+    start_date = request.args.get('minDate', "2015-09-30T00:00:00+00:00")
+    end_date = request.args.get('maxDate', "2014-10-30T00:00:00+00:00")
+    size_filter = get_size_filter(request.args.get('sizeFilter', "fiveOrMore"))
 
     end = dateutil.parser.parse(end_date)
     start = dateutil.parser.parse(start_date)
@@ -104,16 +104,21 @@ def time_spent_api():
     one_months_events = get_events(service, start, end)
     six_months_events = get_events(service, six_month_start, end)
 
-    (all_people_one_months, names) = get_time_spent_with_others(one_months_events, start, end, size_filter)
-    (all_people_six_months, names_six) = get_time_spent_with_others(six_months_events, six_month_start, end,
-                                                                    size_filter)
-    names.update(names_six)
+    one_month_valid_meetings = [event for event in one_months_events if is_valid_meeting(event)]
+    six_month_valid_meetings = [event for event in six_months_events if is_valid_meeting(event)]
+
+    one_months_meetings_within_size = [event for event in one_month_valid_meetings if size_filter(len(event["attendees"]))]
+    six_months_meetings_within_size = [event for event in six_month_valid_meetings if size_filter(len(event["attendees"]))]
+
+    all_people_one_months = get_time_spent_with_others(one_months_meetings_within_size)
+    all_people_six_months = get_time_spent_with_others(six_months_meetings_within_size)
+
     response = [
         {
-            "displayName": names[person],
-            "sixMonthData": time_six_months,
-            "oneMonthData": all_people_one_months.get(person, 0)
-        } for person, time_six_months in all_people_six_months.items()]
+            "displayName": six_month_data["name"],
+            "sixMonthData": six_month_data["time"]/((end - six_month_start).days/7),
+            "oneMonthData": all_people_one_months.get(person, 0)/((end - start).days/7)
+        } for person, six_month_data in all_people_six_months.items()]
 
     response = sorted(response, key=lambda a: a["oneMonthData"])
     response = reversed(response)
@@ -129,30 +134,42 @@ def rollups():
     if credentials is None:
         return flask.redirect(flask.url_for('oauth2callback'))
 
-    end_date = request.args.get('maxDate', "2014-10-30T00:00:00+00:00")
-    end = dateutil.parser.parse(end_date)
-    start = end - datetime.timedelta(days=1 * 30)
+    end_date_param = request.args.get('maxDate', "2014-10-30T00:00:00+00:00")
+
+    end_date = datetime.datetime.combine(dateutil.parser.parse(end_date_param).date().replace(day=1), datetime.datetime.min.time())
+    end_date = end_date.replace(tzinfo=pytz.utc)
+
+    start = end_date - dateutil.relativedelta.relativedelta(months=1)
+    start_six_months = end_date - dateutil.relativedelta.relativedelta(months=6)
 
     service = get_calendar(credentials)
-    one_months_events = get_events(service, start, end)
-    valid_meetings = [event for event in one_months_events if is_valid_meeting(event)]
+    one_months_events = get_events(service, start, end_date)
+    six_months_events = get_events(service, start_six_months, end_date)
+
+    response = {
+        "oneMonth": get_rollups(one_months_events),
+        "sixMonths": get_rollups(six_months_events)
+    }
+
+    return jsonify(response)
+
+def get_rollups(events):
+    valid_meetings = [event for event in events if is_valid_meeting(event)]
 
     time_in_meetings = sum([event["duration"] for event in valid_meetings])
     all_attendees = [person for event in valid_meetings for person in get_real_attendees(event)]
     all_unique = set([person["email"] for person in all_attendees])
 
-    (all_people_one_months, names) = get_time_spent_with_others(one_months_events, start, end)
-    topFive = sorted(all_people_one_months.items(), key=lambda (email,time): -time)[0:5]
-    topFiveNames = [{"name": names[email], "email": email} for (email,time) in topFive]
+    all_people_one_months = get_time_spent_with_others(valid_meetings)
+    topFive = sorted(all_people_one_months.items(), key=lambda (email,data): -data["time"])[0:5]
+    topFiveNames = [{"name": data["name"], "email": email} for (email,data) in topFive]
 
-    response = {
+    return {
         "timeInMeetings": time_in_meetings,
         "numberOfMeetings": len(valid_meetings),
         "totalPeopleMet": len(all_unique),
         "topFive": topFiveNames
     }
-
-    return jsonify(response)
 
 def person_in_meeting(email, event):
 	return email in [attendee["email"] for attendee in event["attendees"]]
@@ -239,22 +256,15 @@ def get_avg_meeting_size(events):
     return float(sum) / float(count)
 
 
-def get_time_spent_with_others(events, start_time, end_time, size_filter_name="ALL"):
-    time_diff = end_time - start_time
-    size_filter = get_size_filter(size_filter_name)
-    # duration means that we know there's a start and end date
-    valid_events = [event for event in events if is_valid_meeting(event)]
-    events_within_time = [event for event in valid_events if event["start"]["dateTime"] >= start_time and event["end"]["dateTime"] <= end_time]
-    events_within_size = [event for event in events_within_time if size_filter(len(event["attendees"]))]
-
-    names = {attendee["email"]: attendee.get("displayName", attendee["email"]) for event in events_within_size for attendee in get_real_attendees(event)}
+def get_time_spent_with_others(events):
+    names = {attendee["email"]: attendee.get("displayName", attendee["email"]) for event in events for attendee in get_real_attendees(event)}
 
     all_people = Counter()
-    for event in events_within_size:
+    for event in events:
         for attendee in get_real_attendees(event):
-            all_people[attendee["email"]] += event["duration"]/(time_diff.days / 7)
+            all_people[attendee["email"]] += event["duration"]
 
-    return all_people, names
+    return {email: {"name":names[email], "time": hours} for email, hours in all_people.items()}
 
 
 def is_valid_meeting(event):
