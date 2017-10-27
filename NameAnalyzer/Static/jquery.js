@@ -7,7 +7,7 @@ $(function() {
 	};
 
 	function load_rollups(data) {
-	  $(".timeInMeetings").append(data["timeInMeetings"] + " hours");
+	  $(".timeInMeetings").append(roundHalf(data["timeInMeetings"]) + " hours");
 	  $(".numberOfMeetings").append(data["numberOfMeetings"] + " meetings");
 	  $(".totalPeopleMet").append(data["totalPeopleMet"] + " people");
 	  for(var i = 0, size = data["topFive"].length; i < size; i++){
@@ -86,7 +86,7 @@ $(function() {
 		sizeFilter : filter
 	  }, function(data) {
 		console.log(data);
-		draw_chart(data);
+		draw_overall_chart(data);
 	  });
 	}
 

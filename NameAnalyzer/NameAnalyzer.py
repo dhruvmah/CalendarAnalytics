@@ -129,7 +129,7 @@ def rollups():
     if credentials is None:
         return flask.redirect(flask.url_for('oauth2callback'))
 
-    end_date = request.args.get('maxDate', "2015-10-30T00:00:00+00:00")
+    end_date = request.args.get('maxDate', "2014-10-30T00:00:00+00:00")
     end = dateutil.parser.parse(end_date)
     start = end - datetime.timedelta(days=1 * 30)
 
@@ -154,6 +154,9 @@ def rollups():
 
     return jsonify(response)
 
+def person_in_meeting(email, event):
+	return email in [attendee["email"] for attendee in event["attendees"]]
+
 
 @app.route('/api/personStats')
 def person_stats():
@@ -162,7 +165,7 @@ def person_stats():
         return flask.redirect(flask.url_for('oauth2callback'))
 
     person_email = request.args.get('personEmail', "alex.lee@nutanix.com")
-    end_date_param = request.args.get('maxDate', "2015-12-30T00:00:00+00:00")
+    end_date_param = request.args.get('maxDate', "2014-12-30T00:00:00+00:00")
 
 
     end_date = datetime.datetime.combine(dateutil.parser.parse(end_date_param).date().replace(day=1), datetime.datetime.min.time())
@@ -183,6 +186,8 @@ def person_stats():
         "timeInMeetingsSeries": {monthStart.date().isoformat(): sum([meeting["duration"] for meeting in meetings]) for monthStart, meetings in meeting_months.items()},
         "numberOfMeetingsSeries": {monthStart.date().isoformat(): len(meetings) for monthStart, meetings in meeting_months.items()}
     }
+
+    print response
 
     return jsonify(response)
 

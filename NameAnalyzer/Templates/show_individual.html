@@ -4,11 +4,73 @@
 <script type=text/javascript> 
 
 $(function() {
+
+     	//Chart.defaults.global.elements.line.fill = false;
+		function draw_individual_chart(data) {
+			console.log(data);
+			// bar chart data
+			var label_array = [];
+			var hours_data = [];
+			var meeting_data = [];
+			for (key in data["timeInMeetingsSeries"]){
+				console.log(key);
+				label_array.push(key);
+				hours_data.push(data["timeInMeetingsSeries"][key]);
+			}
+
+			for (key in data["numberOfMeetingsSeries"]){
+				console.log(key);
+				meeting_data.push(data["numberOfMeetingsSeries"][key]);
+			}
+
+			dataset_array = [
+				{
+					label: "Hours",
+					data: hours_data,
+					fill: false,
+					borderColor: "#3e95cd"
+				},
+				{
+					label: "Number of Meetings",
+					data: meeting_data,
+					fill: false,
+					borderColor: "#c45850"
+				}
+
+			]
+
+		   var lineData = {
+				labels : label_array,
+			 	datasets : dataset_array,
+		   } 
+		   // get bar chart canvas
+		   var ctx = document.getElementById("individual_chart").getContext("2d");
+		   var myLineChart = new Chart(ctx, {
+			    type: 'line',
+			    data: lineData,
+			    options: {
+			    	maintainAspectRatio:true,
+					title: {
+						display: true,
+						text: 'Meeting Stats with {{email}}',
+						padding: 5,
+						fontFamily: "BlinkMacSystemFont",
+						fontSize: 20,
+						fontStyle: "normal"
+				  }
+			    }
+
+			});
+		}
+
+
+
   	function fetch_individual_data(email){
+  		var maxDate = new Date();
 	  $.getJSON($SCRIPT_ROOT + '/api/personStats', {
-		personEmail: email,
-		maxDate: new Date()
+		personEmail: email
 	  }, function(data) {
+	  	draw_individual_chart(data);
 		console.log(data);
 	  });
   	}
@@ -23,6 +85,10 @@ $(function() {
 <div class="container mx-auto">
 	<h1> Time Analyzer </h1>
 	<p> Here are your interactions with {{email}}! </p>
+	<a href="/">Go back </a>
+	<canvas id="individual_chart" class="mt-5 p-3"></canvas>
+
+
 </div>
 
 
