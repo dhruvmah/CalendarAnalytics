@@ -7,11 +7,12 @@ $(function() {
 	};
 
 	function load_rollups(data) {
-	  $(".timeInMeetings").append(roundHalf(data["timeInMeetings"]) + " hours");
-	  $(".numberOfMeetings").append(data["numberOfMeetings"] + " meetings");
-	  $(".totalPeopleMet").append(data["totalPeopleMet"] + " people");
-	  for(var i = 0, size = data["topFive"].length; i < size; i++){
-		  $(".topFive").append("<li>" + "<a href="+ $SCRIPT_ROOT + "/individual/" + data["topFive"][i].email + ">" + data["topFive"][i].name + "</a></li>");
+        console.log(data);
+	  $(".timeInMeetings").append(roundHalf(data["oneMonth"]["timeInMeetings"]) + " hours");
+	  $(".numberOfMeetings").append(data["oneMonth"]["numberOfMeetings"] + " meetings");
+	  $(".totalPeopleMet").append(data["oneMonth"]["totalPeopleMet"] + " people");
+	  for(var i = 0, size = data["oneMonth"]["topFive"].length; i < size; i++){
+		  $(".topFive").append("<li>" + "<a href="+ $SCRIPT_ROOT + "/individual/" + data["oneMonth"]["topFive"][i].email + ">" + data["oneMonth"]["topFive"][i].name + "</a></li>");
 	  }
 	}
 	var myBarChart = null;
