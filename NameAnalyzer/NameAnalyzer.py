@@ -60,13 +60,7 @@ def index():
         return flask.redirect(flask.url_for('oauth2callback'))
 
     service = get_calendar(credentials)
-    eventsResult = service.events().list(calendarId='primary', timeMin="2013-01-01T00:00:00-07:00",
-                                         timeMax="2016-10-31T00:00:00-07:00", maxResults=2500, singleEvents=True,
-                                         orderBy='startTime').execute()
-    events = eventsResult.get('items', [])
-    if not events:
-        print('No upcoming events found.')
-    return render_template('show_events.html', events=events)
+    return render_template('show_events.html')
 
 
 def convert_to_datetimes(events):
@@ -148,33 +142,6 @@ def rollups():
     }
 
     return jsonify(response)
-
-
-@app.route('/api/personStats')
-def person_stats():
-    credentials = get_credentials()
-    if credentials is None:
-        return flask.redirect(flask.url_for('oauth2callback'))
-
-    person_email = request.args.get('personEmail', "alex.lee@nutanix.com")
-    end_date = request.args.get('maxDate', "2015-10-30T00:00:00+00:00")
-    end = dateutil.parser.parse(end_date)
-    start = end - datetime.timedelta(days=1 * 30)
-
-    service = get_calendar(credentials)
-    one_months_events = get_events(service, start, end)
-    valid_meetings = [event for event in one_months_events if valid_meeting(event)]
-    person_meetings = [event for event in valid_meetings if person_in_meeting(person_email, event)]
-
-    time_in_meetings = sum([event["duration"] for event in person_meetings])
-
-    response = {
-        "timeInMeetings": time_in_meetings,
-        "numberOfMeetings": len(person_meetings)
-    }
-
-    return jsonify(response)
-
 
 
 def get_events(service, start, end):
@@ -265,10 +232,6 @@ def get_real_attendees(event):
             attendee["responseStatus"] == "accepted" \
             and (not attendee.has_key('resource') or attendee["resource"] == False) \
             and (not attendee.has_key('self') or attendee["self"] == False)]
-
-
-def person_in_meeting(email, event):
-    return email in [attendee["email"] for attendee in event["attendees"]]
 
 
 def get_size_filter(size_filter):
