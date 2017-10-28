@@ -93,8 +93,8 @@ def time_spent_api():
         return flask.redirect(flask.url_for('oauth2callback'))
 
     service = get_calendar(credentials)
-    start_date = request.args.get('minDate', "2015-09-30T00:00:00+00:00")
-    end_date = request.args.get('maxDate', "2014-10-30T00:00:00+00:00")
+    start_date = request.args.get('minDate', (datetime.datetime.utcnow().replace(tzinfo=pytz.utc) - dateutil.relativedelta.relativedelta(months=1)).isoformat())
+    end_date = request.args.get('maxDate', datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
     size_filter = get_size_filter(request.args.get('sizeFilter', "fiveOrMore"))
 
     end = dateutil.parser.parse(end_date)
@@ -118,7 +118,7 @@ def time_spent_api():
             "email" : person,
             "displayName": six_month_data["name"],
             "sixMonthData": six_month_data["time"]/((end - six_month_start).days/7),
-            "oneMonthData": all_people_one_months.get(person, 0)["time"]/((end - start).days/7)
+            "oneMonthData": all_people_one_months.get(person, {"time": 0})["time"]/((end - start).days/7)
         } for person, six_month_data in all_people_six_months.items()]
 
     response = sorted(response, key=lambda a: a["oneMonthData"])
@@ -135,7 +135,7 @@ def rollups():
     if credentials is None:
         return flask.redirect(flask.url_for('oauth2callback'))
 
-    end_date_param = request.args.get('maxDate', "2014-10-30T00:00:00+00:00")
+    end_date_param = request.args.get('maxDate', datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
 
     end_date = datetime.datetime.combine(dateutil.parser.parse(end_date_param).date().replace(day=1), datetime.datetime.min.time())
     end_date = end_date.replace(tzinfo=pytz.utc)
@@ -147,9 +147,16 @@ def rollups():
     one_months_events = get_events(service, start, end_date)
     six_months_events = get_events(service, start_six_months, end_date)
 
+    six_month_totals = get_rollups(six_months_events)
+
     response = {
         "oneMonth": get_rollups(one_months_events),
-        "sixMonths": get_rollups(six_months_events)
+        "sixMonths": {
+            "timeInMeetings": six_month_totals["timeInMeetings"]/6.0,
+            "numberOfMeetings": six_month_totals["numberOfMeetings"]/6.0,
+            "totalPeopleMet": six_month_totals["totalPeopleMet"]/6.0,
+            "topFive": six_month_totals["topFive"]
+        }
     }
 
     return jsonify(response)
@@ -269,7 +276,7 @@ def get_time_spent_with_others(events):
 
 
 def is_valid_meeting(event):
-    return "duration" in event and "attendees" in event and len(get_real_attendees(event)) > 0
+    return "duration" in event and "attendees" in event and len(get_real_attendees(event)) > 0 and len(get_real_attendees(event)) < 25
 
 
 def get_real_attendees(event):
