@@ -122,7 +122,7 @@ def time_spent_api():
             "email" : person,
             "displayName": six_month_data["name"],
             "sixMonthData": six_month_data["time"]/((end - six_month_start).days/7),
-            "oneMonthData": all_people_one_months.get(person, 0)/((end - start).days/7)
+            "oneMonthData": all_people_one_months.get(person, 0)["time"]/((end - start).days/7)
         } for person, six_month_data in all_people_six_months.items()]
 
     response = sorted(response, key=lambda a: a["oneMonthData"])
