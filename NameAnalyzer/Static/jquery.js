@@ -172,13 +172,6 @@ $(function() {
 			}
 		});
 
-		
-		
-	  	//things to do on load of individual page
-
-		//things to do on load of the main page
-
-
 		$("#chart").click(function(e) {
 			var activeBars = myBarChart.getElementAtEvent(e); 
 			console.log(activeBars[0]._model.label);
@@ -189,11 +182,21 @@ $(function() {
 	  }
 
 
+		function execute_graph() {
+			dates = fetchDates();
+		  	filter = fetchMeetingFilter()
+		  	data = fetchData(dates.minDate, dates.maxDate, filter);
+
+		}
+		
+	  	//things to do on load of individual page
+
+		//things to do on load of the main page
+		execute_graph();
+
 		$( ".btn-group" ).click(function() {
 		  console.log("Submit button clicked");
-		  dates = fetchDates();
-		  filter = fetchMeetingFilter()
-		  data = fetchData(dates.minDate, dates.maxDate, filter);
+		  execute_graph();
 		});
 })
 

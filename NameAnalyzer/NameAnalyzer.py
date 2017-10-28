@@ -52,9 +52,13 @@ def show_entries():
     entries = cur.fetchall()
     return render_template('show_entries.html', entries=entries)
 
-
 @app.route('/')
 def index():
+    return render_template('splash.html')
+
+
+@app.route('/home')
+def home():
     credentials = get_credentials()
     if credentials == None:
         return flask.redirect(flask.url_for('oauth2callback'))
