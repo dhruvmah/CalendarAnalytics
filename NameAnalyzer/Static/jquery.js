@@ -164,6 +164,8 @@ $(function() {
 			  	}
 			}
 		});
+
+		
 		
 	  	//things to do on load of individual page
 
