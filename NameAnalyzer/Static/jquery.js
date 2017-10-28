@@ -9,8 +9,14 @@ $(function() {
 	function load_rollups(data) {
         console.log(data);
 	  $(".timeInMeetings").append(roundHalf(data["oneMonth"]["timeInMeetings"]) + " hours");
+  	  $(".avgTimeInMeetings").append(roundHalf(data["sixMonths"]["timeInMeetings"]) + " hours");
+
 	  $(".numberOfMeetings").append(data["oneMonth"]["numberOfMeetings"] + " meetings");
+	  $(".avgNumberOfMeetings").append(data["sixMonths"]["numberOfMeetings"] + " meetings");
+
 	  $(".totalPeopleMet").append(data["oneMonth"]["totalPeopleMet"] + " people");
+  	  $(".avgTotalPeopleMet").append(data["sixMonths"]["totalPeopleMet"] + " people");
+
 	  for(var i = 0, size = data["oneMonth"]["topFive"].length; i < size; i++){
 		  $(".topFive").append("<li>" + "<a href="+ $SCRIPT_ROOT + "/individual/" + data["oneMonth"]["topFive"][i].email + ">" + data["oneMonth"]["topFive"][i].name + "</a></li>");
 	  }
