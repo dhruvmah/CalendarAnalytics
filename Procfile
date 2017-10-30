@@ -1,1 +1,1 @@
-web: gunicorn app:NameAnalyzer
+web: gunicorn NameAnalyzer:app
