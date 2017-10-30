@@ -1,5 +1,10 @@
 $(function() {
 
+	function roundHalf(num) {
+    	return Math.round(num*4)/4;
+	}
+
+
 	function getRollUps() {
 	  $.getJSON($SCRIPT_ROOT + '/api/rollups', function(data) {
 		load_rollups(data);
@@ -7,15 +12,14 @@ $(function() {
 	};
 
 	function load_rollups(data) {
-        console.log(data);
 	  $(".timeInMeetings").append(roundHalf(data["oneMonth"]["timeInMeetings"]) + " hours");
   	  $(".avgTimeInMeetings").append(roundHalf(data["sixMonths"]["timeInMeetings"]) + " hours");
 
 	  $(".numberOfMeetings").append(data["oneMonth"]["numberOfMeetings"] + " meetings");
-	  $(".avgNumberOfMeetings").append(data["sixMonths"]["numberOfMeetings"] + " meetings");
+	  $(".avgNumberOfMeetings").append(roundHalf(data["sixMonths"]["numberOfMeetings"]) + " meetings");
 
 	  $(".totalPeopleMet").append(data["oneMonth"]["totalPeopleMet"] + " people");
-  	  $(".avgTotalPeopleMet").append(data["sixMonths"]["totalPeopleMet"] + " people");
+  	  $(".avgTotalPeopleMet").append(roundHalf(data["sixMonths"]["totalPeopleMet"]) + " people");
 
 	  for(var i = 0, size = data["oneMonth"]["topFive"].length; i < size; i++){
 		  $(".topFive").append("<li>" + "<a href="+ $SCRIPT_ROOT + "/individual/" + data["oneMonth"]["topFive"][i].email + ">" + data["oneMonth"]["topFive"][i].name + "</a></li>");
@@ -29,7 +33,6 @@ $(function() {
 		maxDate: maxDate,
 		sizeFilter : filter
 	  }, function(data) {
-		console.log(data);
 		draw_overall_chart(data);
 	  });
 	}
@@ -44,8 +47,9 @@ $(function() {
 	  return dict;
 	  };
 	*/
-	function fetchDates() { 
-	   var radioValue = $("input[name='date_range']:checked").val();
+
+	function fetchDates(radioValue) { 
+	   var radioValue = (typeof radioValue !== 'undefined') ?  radioValue : 1;
 	   var maxDate = new Date();
 	   var minDate = new Date();
 	   if (radioValue == 3) {
@@ -59,6 +63,8 @@ $(function() {
 		return dict; 
 	  };
 
+
+
 	  function addMonths(date, months) {
 		var result = new Date(date),
 			expectedMonth = ((date.getMonth() + months) % 12 + 12) % 12;
@@ -69,9 +75,8 @@ $(function() {
 		return result;
 	  }
 
-	function fetchMeetingFilter() { 
-	   var radioValue = $("input[name='radio']:checked").val();
-	   console.log(radioValue);
+	function fetchMeetingFilter(radioValue) { 
+	   var radioValue = (typeof radioValue !== 'undefined') ?  radioValue : "";
 	   return radioValue;
 	  };
 
@@ -92,16 +97,11 @@ $(function() {
 		maxDate: maxDate,
 		sizeFilter : filter
 	  }, function(data) {
-		console.log(data);
 		draw_overall_chart(data);
 	  });
 	}
 
-	function roundHalf(num) {
-    	return Math.round(num*4)/4;
-	}
 	
-
 	function draw_overall_chart(data) {
 		$("canvas#chart").remove();
 		$(".chartContainer").append('<canvas id="chart" class="animated fadeIn" height="150"></canvas>');
@@ -114,7 +114,6 @@ $(function() {
 
 		for(var i = 0, size = data.length; i < size ; i++){
 		  person = data[i];
-		  console.log(person["displayName"]);
 		  label_array.push(person["displayName"]);
 		  email_array.push(person["email"]);
 		  one_month_data.push(roundHalf(person["oneMonthData"]));
@@ -175,29 +174,38 @@ $(function() {
 		$("#chart").click(function(e) {
 			var activeBars = myBarChart.getElementAtEvent(e); 
 			console.log(activeBars[0]._model.label);
-
 			var a = activeBars[0]._chart.config.data.labels.indexOf(activeBars[0]._model.label);
 	   		window.location.href='/individual/' + activeBars[0]._chart.config.data.emails[a];
 		});
 	  }
 
+		
+	  	var dates = fetchDates();
+	  	var meetingFilter = fetchMeetingFilter();
 
-		function execute_graph() {
-			dates = fetchDates();
-		  	filter = fetchMeetingFilter()
-		  	data = fetchData(dates.minDate, dates.maxDate, filter);
+		function execute_graph(input_type, input_value) {
+			//based on input_type fetch the right information....
+		  	data = fetchData(dates.minDate, dates.maxDate, meetingFilter);
 
 		}
-		
+
 	  	//things to do on load of individual page
 
 		//things to do on load of the main page
 		execute_graph();
+		
 
-		$( ".btn-group" ).click(function() {
-		  console.log("Submit button clicked");
-		  execute_graph();
+		$('label').click(function() {
+		    var input_value = $(this).find("input").val();
+		 	var input_type = $(this).find("input").attr("name");
+  		 	if (input_type == "date_range") {
+  		  		dates = fetchDates(input_value);
+  		  	} else {
+  		  		meetingFilter = fetchMeetingFilter(input_value);
+  		  	}
+			execute_graph();
 		});
+
 })
 
 
