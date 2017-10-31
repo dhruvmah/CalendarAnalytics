@@ -1,1 +1,1 @@
-web: gunicorn --preload NameAnalyzer:app
+web: gunicorn --preload --debug --error-log=- NameAnalyzer:app
