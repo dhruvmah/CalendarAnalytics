@@ -1,1 +1,1 @@
-web: gunicorn NameAnalyzer:app
+web: gunicorn --preload NameAnalyzer:app
