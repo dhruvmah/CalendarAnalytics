@@ -173,7 +173,7 @@ def get_rollups(events):
     all_unique = set([person["email"] for person in all_attendees])
 
     all_people_one_months = get_time_spent_with_others(valid_meetings)
-    topFive = sorted(all_people_one_months.items(), key=lambda email,data: -data["time"])[0:5]
+    topFive = sorted(all_people_one_months.items(), key=lambda (email,data): -data["time"])[0:5]
     topFiveNames = [{"name": data["name"], "email": email} for (email,data) in topFive]
 
     return {
