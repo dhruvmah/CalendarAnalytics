@@ -50,6 +50,7 @@ $(function() {
 
 	function fetchDates(radioValue) { 
 	   var radioValue = (typeof radioValue !== 'undefined') ?  radioValue : 1;
+	   console.log(radioValue + "is the radioValue");
 	   var maxDate = new Date();
 	   var minDate = new Date();
 	   if (radioValue == 3) {
@@ -57,7 +58,8 @@ $(function() {
 	   } else if (radioValue == 2) {
 		  minDate.setMonth(minDate.getMonth() - 3);   
 	   } else {
-		  minDate.setDate(minDate.getMonth() - 1);   
+		  minDate.setMonth(minDate.getMonth() - 1);   
+		  console.log(minDate);
 	   }
 		var dict = {"minDate": minDate, "maxDate": maxDate};
 		return dict; 
@@ -116,7 +118,7 @@ $(function() {
 		  person = data[i];
 		  label_array.push(person["displayName"]);
 		  email_array.push(person["email"]);
-		  one_month_data.push(roundHalf(person["oneMonthData"]));
+		  one_month_data.push(person["oneMonthData"].toFixed(2));
 		}
 
 		dataset_array = [
@@ -180,7 +182,7 @@ $(function() {
 	  }
 
 		
-	  	var dates = fetchDates();
+	  	var dates = fetchDates(1);
 	  	var meetingFilter = fetchMeetingFilter();
 
 		function execute_graph(input_type, input_value) {
