@@ -194,7 +194,7 @@ def person_stats():
         return flask.redirect(flask.url_for('oauth2callback'))
 
     person_email = request.args.get('personEmail', "alex.lee@nutanix.com")
-    end_date_param = request.args.get('maxDate', "2014-12-30T00:00:00+00:00")
+    end_date_param = request.args.get('maxDate', "2017-10-30T00:00:00+00:00")
 
 
     end_date = datetime.datetime.combine(dateutil.parser.parse(end_date_param).date().replace(day=1), datetime.datetime.min.time())

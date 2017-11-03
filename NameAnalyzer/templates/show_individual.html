@@ -68,7 +68,8 @@ $(function() {
   	function fetch_individual_data(email){
   		var maxDate = new Date();
 	  $.getJSON($SCRIPT_ROOT + '/api/personStats', {
-		personEmail: email
+		personEmail: email,
+		maxDate: maxDate;
 	  }, function(data) {
 	  	draw_individual_chart(data);
 		console.log(data);
